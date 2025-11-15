@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+    enviornment {
+        IMAGE_NAME ='devops-playground/hello-app'
+        IMAGE_TAG ="$(env.BUILD_NUMBER)"
+        REGISTRY="localhost:5000"
+    }
+    stages{
+        stage('Checkout'){steps{Checkout scm}}
+        stage('Build Docker Image'){
+            steps{
+                dir('level-1-hello-jenkins'){
+                    sh "docker build-t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+        stage('Unit Test'){
+            steps{
+                echo ' No unit tests present -- add pytets or linting here.'
+            }
+        }
+        stage('Tag & Push'){
+            steps{
+                sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+                sh "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+        stage("Deploy {local}"){
+            steps{
+                echo 'Optional: kubectl apply-f ../level-2-k8s-minikube/k8s if desired'
+            }
+        }
+    }
+    post {always { cleanWS()}}
+}
